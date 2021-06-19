@@ -54,6 +54,7 @@ uint8_t IOExpdrExampleReadFlag = 0;
 uint8_t eepromDataReadBack[2];
 uint8_t IOExpdrDataReadBack;
 uint8_t IOExpdrDataWrite = 0b01010101;
+uint32_t time_stamp;
 int Switch = 0;
 int stamp=0;
 int start=0;
@@ -132,18 +133,25 @@ int main(void)
 				if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==0){
 					IOExpdrExampleReadFlag =1;
 					stamp =1;
+					time_stamp=HAL_GetTick();
 				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==1
-						&&IOExpdrExampleReadFlag ==0){
+						&&IOExpdrExampleReadFlag ==0 &&(HAL_GetTick()-time_stamp>=10)){
 					eepromExampleWriteFlag =1;
 					stamp=2;
+					time_stamp=HAL_GetTick();
 				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==2
-						&&eepromExampleWriteFlag==0){
+						&&eepromExampleWriteFlag==0&&(HAL_GetTick()-time_stamp>=10)){
 					IOExpdrExampleWriteFlag=1;
 					stamp=3;
-				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_SET && stamp==3
-					    &&IOExpdrExampleWriteFlag==0){
+					time_stamp=HAL_GetTick();
+				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==3
+						&&IOExpdrExampleWriteFlag==0&&(HAL_GetTick()-time_stamp>=10)){
+					eepromExampleReadFlag=1;
+					stamp=4;
+					time_stamp=HAL_GetTick();
+				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_SET && stamp==4
+					    &&eepromExampleReadFlag==0&&(HAL_GetTick()-time_stamp>=10)){
 					stamp=0;
-					eepromExampleReadFlag =1;
 				}
 		Out_bit = 0b11110000;//inverse logic
 		Out_bit |=((IOExpdrDataReadBack&0b00001000)>>3);
@@ -319,7 +327,7 @@ void EEPROMWriteExample() {
 
 		static uint8_t data[] = { 0b00000000, 0b00000000 };
 		data[0] = IOExpdrDataWrite;
-		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,
+		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x35, I2C_MEMADD_SIZE_16BIT,
 				data, 2);
 
 		eepromExampleWriteFlag = 0;
@@ -328,7 +336,7 @@ void EEPROMWriteExample() {
 void EEPROMReadExample(uint8_t *Rdata, uint16_t len) {
 	if (eepromExampleReadFlag && hi2c1.State == HAL_I2C_STATE_READY) {
 
-		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,
+		HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x35, I2C_MEMADD_SIZE_16BIT,
 				Rdata, len);
 		eepromExampleReadFlag = 0;
 	}
