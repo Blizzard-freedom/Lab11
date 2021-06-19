@@ -129,13 +129,16 @@ int main(void)
 				if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==0){
 					IOExpdrExampleReadFlag =1;
 					stamp =1;
-				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==1){
+				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==1
+						&&IOExpdrExampleReadFlag ==0){
 					eepromExampleWriteFlag =1;
 					stamp=2;
-				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==2){
+				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==2
+						&&eepromExampleWriteFlag==0){
 					eepromExampleReadFlag =1;
 					stamp=3;
-				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==3){
+				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==3
+						&&eepromExampleReadFlag==0){
 					IOExpdrExampleWriteFlag=1;
 				    stamp =4;
 				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_SET && stamp==4){
@@ -310,8 +313,6 @@ void EEPROMWriteExample() {
 		data[0] = IOExpdrDataWrite;
 		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,
 				data, 2);
-
-
 
 		eepromExampleWriteFlag = 0;
 	}
