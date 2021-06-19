@@ -129,16 +129,15 @@ int main(void)
 			eepromExampleWriteFlag =1;
 			stamp=3;
 		}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==1){
-			Out_bit = 0b11110000;
-			Out_bit |=((IOExpdrDataReadBack&0b00001000)>>3);
-			Out_bit |=((IOExpdrDataReadBack&0b00000100)>>1);
-			Out_bit |=((IOExpdrDataReadBack&0b00000010)<<1);
-			Out_bit |=((IOExpdrDataReadBack&0b00000001)<<3);
-			IOExpdrDataWrite = Out_bit;
 			IOExpdrExampleWriteFlag=1;
 			stamp=2;
 		}
-
+		Out_bit = 0b11110000;
+		Out_bit |=((IOExpdrDataReadBack&0b00001000)>>3);
+		Out_bit |=((IOExpdrDataReadBack&0b00000100)>>1);
+		Out_bit |=((IOExpdrDataReadBack&0b00000010)<<1);
+		Out_bit |=((IOExpdrDataReadBack&0b00000001)<<3);
+		IOExpdrDataWrite = Out_bit;
 		IOExpenderReadPinA(&IOExpdrDataReadBack);
 		IOExpenderWritePinB(IOExpdrDataWrite);
 		EEPROMWriteExample();
@@ -299,7 +298,7 @@ static void MX_GPIO_Init(void)
 void EEPROMWriteExample() {
 	if (eepromExampleWriteFlag && hi2c1.State == HAL_I2C_STATE_READY) {
 
-		static uint8_t data[] = { 0b00000000, 0b00000000 };
+		static uint8_t data[2] = { 0b00000000, 0b00000000 };
 		data[0] = IOExpdrDataReadBack;
 		HAL_I2C_Mem_Write_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,
 				data, 2);
@@ -324,6 +323,11 @@ void IOExpenderInit() {
 			0x00, 0x00, 0x00, 0x00 };
 	HAL_I2C_Mem_Write(&hi2c1, IOEXPD_ADDR, 0x00, I2C_MEMADD_SIZE_8BIT, Setting,
 			0x16, 100);
+	static uint8_t start[2];
+	HAL_I2C_Mem_Read_IT(&hi2c1, EEPROM_ADDR, 0x2c, I2C_MEMADD_SIZE_16BIT,
+					start, 2);
+	HAL_I2C_Mem_Write_IT(&hi2c1, IOEXPD_ADDR, 0x15, I2C_MEMADD_SIZE_8BIT,
+					start[0], 1);
 
 }
 void IOExpenderReadPinA(uint8_t *Rdata) {
