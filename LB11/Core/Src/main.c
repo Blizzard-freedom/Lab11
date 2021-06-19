@@ -57,6 +57,7 @@ uint8_t IOExpdrDataWrite = 0b01010101;
 int Switch = 0;
 int stamp=0;
 int start=0;
+int Mode =0;
 uint8_t Out_bit = 0b00000000;
 
 /* USER CODE END PV */
@@ -125,6 +126,8 @@ int main(void)
 		}else if(start==1){
 			IOExpdrExampleWriteFlag=1;
 			start=2;
+		}else if(start==2&&Switch==1&&IOExpdrExampleWriteFlag==0){
+			start=3;
 		}
 				if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==0){
 					IOExpdrExampleReadFlag =1;
@@ -135,14 +138,12 @@ int main(void)
 					stamp=2;
 				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==2
 						&&eepromExampleWriteFlag==0){
-					eepromExampleReadFlag =1;
-					stamp=3;
-				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_RESET && stamp==3
-						&&eepromExampleReadFlag==0){
 					IOExpdrExampleWriteFlag=1;
-				    stamp =4;
-				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_SET && stamp==4){
+					stamp=3;
+				}else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==GPIO_PIN_SET && stamp==3
+					    &&IOExpdrExampleWriteFlag==0){
 					stamp=0;
+					eepromExampleReadFlag =1;
 				}
 		Out_bit = 0b11110000;//inverse logic
 		Out_bit |=((IOExpdrDataReadBack&0b00001000)>>3);
@@ -153,7 +154,14 @@ int main(void)
 		EEPROMWriteExample();
 		EEPROMReadExample(eepromDataReadBack,2);
 		IOExpenderReadPinA(&IOExpdrDataReadBack);
-		IOExpenderWritePinB(eepromDataReadBack[0]);
+		if(start<=2){
+			IOExpenderWritePinB(eepromDataReadBack[0]);
+			Switch=1;
+			Mode=0;
+		}else if(start==3){
+			IOExpenderWritePinB(IOExpdrDataWrite);
+			Mode=1;
+		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
